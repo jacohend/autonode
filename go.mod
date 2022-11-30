@@ -3,6 +3,7 @@ module github.com/jacohend/autonode
 go 1.18
 
 require (
+	github.com/enriquebris/goconcurrentqueue v0.7.0
 	github.com/golang/protobuf v1.5.2
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/perlin-network/noise v1.1.3

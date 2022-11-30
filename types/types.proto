@@ -28,6 +28,8 @@ message Event {
 message Ack {
   string node_id = 1;
   string event_id = 2;
-  google.protobuf.Timestamp timestamp = 3;
+  string key = 3;
+  bytes value = 4;
+  google.protobuf.Timestamp timestamp = 5;
 }
 

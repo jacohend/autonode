@@ -2,52 +2,48 @@ package autonode
 
 import (
 	"fmt"
-	"github.com/jessevdk/go-flags"
+	"github.com/jacohend/autonode/queue"
+	"github.com/jacohend/autonode/types"
+	"github.com/jacohend/autonode/util"
 	"github.com/perlin-network/noise"
 	"github.com/perlin-network/noise/kademlia"
 )
-
-func check(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
-func main() {
-	var config Config
-	flagParser := flags.NewParser(&config, flags.IgnoreUnknown)
-	if _, err := flagParser.Parse(); err != nil {
-		panic(err)
-	}
-	server := ServerNode{Config: config}
-	server.Start()
-}
 
 type ServerNode struct {
 	Config  Config
 	Node    *noise.Node
 	Overlay *kademlia.Protocol
+	Events  *queue.Queue
 }
 
 func (server *ServerNode) Start() {
 	node, err := noise.NewNode(noise.WithNodeAddress(server.Config.Host))
+	util.Check(err)
+
 	server.Node = node
-	check(err)
 	defer server.Node.Close()
-	server.Node.Handle(func(ctx noise.HandlerContext) error {
-		if !ctx.IsRequest() {
-			return nil
-		}
-		ctx.ID()
 
-		fmt.Printf("Got a message: '%s'\n", string(ctx.Data()))
+	server.Events = queue.NewQueue()
+	server.Node.Handle(server.Handle)
 
-		return ctx.Send([]byte("Hi!"))
-	})
-
-	server.Overlay = kademlia.New()
+	server.Overlay = kademlia.New(kademlia.WithProtocolEvents(kademlia.Events{
+		OnPeerAdmitted: func(id noise.ID) {
+			fmt.Printf("New peer %s(%s).\n", id.Address, id.ID.String()[:printedLength])
+		},
+		OnPeerEvicted: func(id noise.ID) {
+			fmt.Printf("Removed peer %s(%s).\n", id.Address, id.ID.String()[:printedLength])
+		},
+	}))
 	server.Node.Bind(server.Overlay.Protocol())
-	check(server.Node.Listen())
+	util.Check(server.Node.Listen())
 	bootstrap(server.Node, server.Config.Seeds...)
 	discover(server.Overlay)
+}
+
+func (server *ServerNode) Send(event types.Event) error {
+	return nil
+}
+
+func (server *ServerNode) SendSync(event types.Event) (types.Ack, error) {
+	return types.Ack{}, nil
 }

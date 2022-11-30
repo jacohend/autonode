@@ -5,4 +5,4 @@ mod:
 	go mod tidy && go mod vendor
 
 build:
-	go build autonode.go
+	go build cmd/main.go
