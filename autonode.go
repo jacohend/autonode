@@ -3,7 +3,6 @@ package autonode
 import (
 	"fmt"
 	"github.com/jacohend/autonode/queue"
-	"github.com/jacohend/autonode/types"
 	"github.com/jacohend/autonode/util"
 	"github.com/perlin-network/noise"
 	"github.com/perlin-network/noise/kademlia"
@@ -38,12 +37,4 @@ func (server *ServerNode) Start() {
 	util.Check(server.Node.Listen())
 	bootstrap(server.Node, server.Config.Seeds...)
 	discover(server.Overlay)
-}
-
-func (server *ServerNode) Send(event types.Event) error {
-	return nil
-}
-
-func (server *ServerNode) SendSync(event types.Event) (types.Ack, error) {
-	return types.Ack{}, nil
 }

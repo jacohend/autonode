@@ -2,6 +2,7 @@ package queue
 
 import (
 	"github.com/enriquebris/goconcurrentqueue"
+	"github.com/jacohend/autonode/types"
 	"sync"
 )
 
@@ -25,6 +26,7 @@ func (queue *Queue) PopItem() (any, error) {
 
 func (queue *Queue) RemoveItem(T any) error {
 	queue.Lock.Lock()
+	defer queue.Lock.Unlock()
 	finder := goconcurrentqueue.NewFIFO()
 	i := queue.Items.GetLen()
 	for i >= 0 {
@@ -38,6 +40,24 @@ func (queue *Queue) RemoveItem(T any) error {
 		i--
 	}
 	queue.Items = finder
-	queue.Lock.Unlock()
+	return nil
+}
+
+func (queue *Queue) RemoveItemById(id string) error {
+	queue.Lock.Lock()
+	defer queue.Lock.Unlock()
+	finder := goconcurrentqueue.NewFIFO()
+	i := queue.Items.GetLen()
+	for i >= 0 {
+		item, err := queue.PopItem()
+		if err != nil {
+			return err
+		}
+		if item.(types.Event).Id != id {
+			finder.Enqueue(item)
+		}
+		i--
+	}
+	queue.Items = finder
 	return nil
 }

@@ -37,3 +37,18 @@ func discover(overlay *kademlia.Protocol) {
 		fmt.Printf("Did not discover any peers.\n")
 	}
 }
+
+func (server *ServerNode) SendToID(id noise.ID, msg noise.Serializable) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	err := server.Node.SendMessage(ctx, id.Address, msg)
+	cancel()
+	if err != nil {
+		fmt.Printf("Failed to send message to %s(%s). Skipping... [error: %s]\n",
+			id.Address,
+			id.ID.String()[:printedLength],
+			err,
+		)
+		return err
+	}
+	return nil
+}

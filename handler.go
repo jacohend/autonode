@@ -1,11 +1,8 @@
 package autonode
 
 import (
-	"context"
-	"fmt"
 	"github.com/jacohend/autonode/types"
 	"github.com/perlin-network/noise"
-	"time"
 )
 
 func (server *ServerNode) Handle(ctx noise.HandlerContext) error {
@@ -25,27 +22,20 @@ func (server *ServerNode) Handle(ctx noise.HandlerContext) error {
 
 	case types.Event:
 		server.Events.PushItem(m)
+		//TODO: send this message when we begin queue processing this item
+		/*		go ctx.SendMessage(types.Ack{
+				NodeId:    server.Node.ID().String(),
+				EventId:   m.Id,
+				Key:       "",
+				Value:     nil,
+				Timestamp: util.Now(),
+			})*/
 	case types.Ack:
-
+		server.Events.RemoveItemById(m.EventId)
 	default:
 		for _, id := range server.Overlay.Table().Peers() {
 			go server.SendToID(id, obj)
 		}
-	}
-	return nil
-}
-
-func (server *ServerNode) SendToID(id noise.ID, msg noise.Serializable) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	err := server.Node.SendMessage(ctx, id.Address, msg)
-	cancel()
-	if err != nil {
-		fmt.Printf("Failed to send message to %s(%s). Skipping... [error: %s]\n",
-			id.Address,
-			id.ID.String()[:printedLength],
-			err,
-		)
-		return err
 	}
 	return nil
 }
