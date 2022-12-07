@@ -3,27 +3,30 @@ package autonode
 import (
 	"fmt"
 	"github.com/jacohend/autonode/queue"
+	"github.com/jacohend/autonode/types"
 	"github.com/jacohend/autonode/util"
 	"github.com/perlin-network/noise"
 	"github.com/perlin-network/noise/kademlia"
+	"time"
 )
 
 type ServerNode struct {
-	Config  Config
-	Node    *noise.Node
-	Overlay *kademlia.Protocol
-	Events  *queue.Queue
+	Config       Config
+	Node         *noise.Node
+	Overlay      *kademlia.Protocol
+	Events       *queue.Queue
+	EventHandler func(event types.Event) (types.Result, error)
 }
 
-func (server *ServerNode) Start() {
+func NewServerNode(config Config) *ServerNode {
+	server := ServerNode{Config: config}
 	node, err := noise.NewNode(noise.WithNodeAddress(server.Config.Host))
 	util.Check(err)
 
 	server.Node = node
-	defer server.Node.Close()
+	server.Node.Handle(server.Handle)
 
 	server.Events = queue.NewQueue()
-	server.Node.Handle(server.Handle)
 
 	server.Overlay = kademlia.New(kademlia.WithProtocolEvents(kademlia.Events{
 		OnPeerAdmitted: func(id noise.ID) {
@@ -34,7 +37,35 @@ func (server *ServerNode) Start() {
 		},
 	}))
 	server.Node.Bind(server.Overlay.Protocol())
+
+	return &server
+}
+
+func (server *ServerNode) SetCallback(handler func(event types.Event) (types.Result, error)) {
+	server.EventHandler = handler
+}
+
+func (server *ServerNode) Start() {
+	defer util.LogAndForget(server.Node.Close())
 	util.Check(server.Node.Listen())
 	bootstrap(server.Node, server.Config.Seeds...)
 	discover(server.Overlay)
+	for {
+		event, err := server.Events.PopItem()
+		if err != nil {
+			time.Sleep(100 * time.Millisecond)
+		}
+		go server.ProcessEvent(event.(types.Event))
+	}
+}
+
+func (server *ServerNode) ProcessEvent(event types.Event) {
+	server.SendToNetworkSync(types.Ack{
+		NodeId:    server.Node.ID().String(),
+		EventId:   event.Id,
+		Timestamp: util.Now(),
+	})
+	result, err := server.EventHandler(event)
+	util.LogAndForget(err)
+	server.SendToNetwork(result)
 }

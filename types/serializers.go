@@ -45,3 +45,14 @@ func AckUnmarshal(m []byte) (Ack, error) {
 	err := proto.Unmarshal(m, &a)
 	return a, err
 }
+
+func (a Result) Marshal() []byte {
+	result, _ := proto.Marshal(&a)
+	return result
+}
+
+func ResultUnmarshal(m []byte) (Result, error) {
+	r := Result{}
+	err := proto.Unmarshal(m, &r)
+	return r, err
+}

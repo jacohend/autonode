@@ -52,3 +52,15 @@ func (server *ServerNode) SendToID(id noise.ID, msg noise.Serializable) error {
 	}
 	return nil
 }
+
+func (server *ServerNode) SendToNetwork(msg noise.Serializable) {
+	for _, id := range server.Overlay.Table().Peers() {
+		go server.SendToID(id, msg)
+	}
+}
+
+func (server *ServerNode) SendToNetworkSync(msg noise.Serializable) {
+	for _, id := range server.Overlay.Table().Peers() {
+		server.SendToID(id, msg)
+	}
+}

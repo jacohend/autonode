@@ -11,6 +11,7 @@ func main() {
 	if _, err := flagParser.Parse(); err != nil {
 		panic(err)
 	}
-	server := autonode.ServerNode{Config: config}
-	server.Start()
+	server := autonode.NewServerNode(config)
+	//server.SetCallback()
+	go server.Start()
 }

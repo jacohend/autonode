@@ -32,10 +32,10 @@ func (server *ServerNode) Handle(ctx noise.HandlerContext) error {
 			})*/
 	case types.Ack:
 		server.Events.RemoveItemById(m.EventId)
+	case types.Result:
+
 	default:
-		for _, id := range server.Overlay.Table().Peers() {
-			go server.SendToID(id, obj)
-		}
+		server.SendToNetwork(m)
 	}
 	return nil
 }
