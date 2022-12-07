@@ -5,4 +5,4 @@ mod:
 	go mod tidy && go mod vendor
 
 build:
-	go build cmd/main.go
+	go build -o autonode github.com/jacohend/autonode/cmd
