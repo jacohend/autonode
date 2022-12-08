@@ -14,12 +14,17 @@ import (
 
 var server *autonode.ServerNode
 
+type Config struct {
+	Config autonode.Config `group:"autonode" namespace:"autonode"`
+	Host   string          `long:"addr" description:"host/port combo to listen in on"`
+}
+
 func main() {
-	config := autonode.Config{}
+	config := Config{}
 	flagParser := flags.NewParser(&config, flags.IgnoreUnknown)
 	_, err := flagParser.Parse()
 	util.Check(err)
-	server = autonode.NewServerNode(config)
+	server = autonode.NewServerNode(config.Config)
 	server.SetEventHandler(ApiEventHandler)
 	server.SetResultHandler(ApiResultHandler)
 	fmt.Println("Starting autonode...")
@@ -28,7 +33,7 @@ func main() {
 	StartApi(config)
 }
 
-func StartApi(config autonode.Config) {
+func StartApi(config Config) {
 	r := mux.NewRouter()
 	r.HandleFunc("/", ApiHandler)
 	http.Handle("/", r)
