@@ -6,19 +6,20 @@ import "google/protobuf/timestamp.proto";
 option go_package = "./types";
 
 message Announce {
-  string node_id = 1;
-  string ip = 2;
-  google.protobuf.Timestamp timestamp = 3;
+  bytes node_id = 1;
+  string addr = 2;
+  int32 port = 3;
+  google.protobuf.Timestamp timestamp = 4;
 }
 
 message Time {
-  string node_id = 1;
+  bytes node_id = 1;
   google.protobuf.Timestamp timestamp = 2;
 }
 
 message Event {
-  string node_id = 1;
-  string id = 2;
+  bytes node_id = 1;
+  bytes id = 2;
   string key = 3;
   bytes value = 4;
   bool fanout = 5;
@@ -26,14 +27,14 @@ message Event {
 }
 
 message Ack {
-  string node_id = 1;
-  string event_id = 2;
+  bytes node_id = 1;
+  bytes event_id = 2;
   google.protobuf.Timestamp timestamp = 5;
 }
 
 message Result {
-  string node_id = 1;
-  string event_id = 2;
+  bytes node_id = 1;
+  bytes event_id = 2;
   string key = 3;
   bytes value = 4;
   google.protobuf.Timestamp timestamp = 5;

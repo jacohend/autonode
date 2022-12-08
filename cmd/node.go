@@ -12,6 +12,7 @@ func main() {
 		panic(err)
 	}
 	server := autonode.NewServerNode(config)
-	//server.SetCallback()
+	//server.SetEventHandler()
+	//server.SetResultHandler()
 	go server.Start()
 }

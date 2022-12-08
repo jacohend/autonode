@@ -3,6 +3,7 @@ package autonode
 import (
 	"context"
 	"fmt"
+	"github.com/jacohend/autonode/util"
 	"github.com/perlin-network/noise"
 	"github.com/perlin-network/noise/kademlia"
 	"strings"
@@ -51,6 +52,14 @@ func (server *ServerNode) SendToID(id noise.ID, msg noise.Serializable) error {
 		return err
 	}
 	return nil
+}
+
+func (server *ServerNode) SendToNetworkBytes(id []byte, msg noise.Serializable) {
+	sendId, err := noise.UnmarshalID(id)
+	if util.LogError(err) != nil {
+		return
+	}
+	go server.SendToID(sendId, msg)
 }
 
 func (server *ServerNode) SendToNetwork(msg noise.Serializable) {

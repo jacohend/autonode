@@ -11,11 +11,12 @@ import (
 )
 
 type ServerNode struct {
-	Config       Config
-	Node         *noise.Node
-	Overlay      *kademlia.Protocol
-	Events       *queue.Queue
-	EventHandler func(event types.Event) (types.Result, error)
+	Config        Config
+	Node          *noise.Node
+	Overlay       *kademlia.Protocol
+	Events        *queue.Queue
+	EventHandler  func(event types.Event) (types.Result, error)
+	ResultHandler func(event types.Result) error
 }
 
 func NewServerNode(config Config) *ServerNode {
@@ -41,8 +42,12 @@ func NewServerNode(config Config) *ServerNode {
 	return &server
 }
 
-func (server *ServerNode) SetCallback(handler func(event types.Event) (types.Result, error)) {
+func (server *ServerNode) SetEventHandler(handler func(event types.Event) (types.Result, error)) {
 	server.EventHandler = handler
+}
+
+func (server *ServerNode) SetResultHandler(handler func(event types.Result) error) {
+	server.ResultHandler = handler
 }
 
 func (server *ServerNode) Start() {
@@ -51,9 +56,10 @@ func (server *ServerNode) Start() {
 	bootstrap(server.Node, server.Config.Seeds...)
 	discover(server.Overlay)
 	for {
-		event, err := server.Events.PopItem()
+		event, err := server.Events.Items.DequeueOrWaitForNextElement()
 		if err != nil {
 			time.Sleep(100 * time.Millisecond)
+			continue
 		}
 		go server.ProcessEvent(event.(types.Event))
 	}
@@ -61,11 +67,11 @@ func (server *ServerNode) Start() {
 
 func (server *ServerNode) ProcessEvent(event types.Event) {
 	server.SendToNetworkSync(types.Ack{
-		NodeId:    server.Node.ID().String(),
+		NodeId:    server.Node.ID().Marshal(),
 		EventId:   event.Id,
 		Timestamp: util.Now(),
 	})
 	result, err := server.EventHandler(event)
 	util.LogAndForget(err)
-	server.SendToNetwork(result)
+	server.SendToNetworkBytes(event.NodeId, result)
 }

@@ -1,6 +1,7 @@
 package queue
 
 import (
+	"bytes"
 	"github.com/enriquebris/goconcurrentqueue"
 	"github.com/jacohend/autonode/types"
 	"sync"
@@ -43,7 +44,7 @@ func (queue *Queue) RemoveItem(T any) error {
 	return nil
 }
 
-func (queue *Queue) RemoveItemById(id string) error {
+func (queue *Queue) RemoveItemById(id []byte) error {
 	queue.Lock.Lock()
 	defer queue.Lock.Unlock()
 	finder := goconcurrentqueue.NewFIFO()
@@ -53,7 +54,7 @@ func (queue *Queue) RemoveItemById(id string) error {
 		if err != nil {
 			return err
 		}
-		if item.(types.Event).Id != id {
+		if bytes.Compare(item.(types.Event).Id, id) == 0 {
 			finder.Enqueue(item)
 		}
 		i--
