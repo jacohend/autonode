@@ -14,7 +14,7 @@ func (server *ServerNode) Handle(ctx noise.HandlerContext) error {
 	if util.LogError(err) != nil {
 		return err
 	}
-	fmt.Printf("Data: %v\n", obj)
+	fmt.Printf("Data: %#v\n", obj)
 
 	switch m := obj.(type) {
 	case types.Event:
