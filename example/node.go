@@ -53,7 +53,7 @@ func ApiHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	server.SendToNetwork(types.Event{
+	server.SendToNetworkSync(types.Event{
 		NodeId:    server.Node.ID().Marshal(),
 		Id:        ulid.Bytes(),
 		Key:       "SAMPLE_EVENT",
