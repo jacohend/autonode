@@ -8,12 +8,13 @@ import (
 )
 
 func (server *ServerNode) Handle(ctx noise.HandlerContext) error {
-	fmt.Printf("Data: %v\n", ctx.Data())
+	fmt.Printf("Raw Data: %v\n", ctx.Data())
 
 	obj, err := ctx.DecodeMessage()
 	if util.LogError(err) != nil {
 		return err
 	}
+	fmt.Printf("Data: %v\n", obj)
 
 	switch m := obj.(type) {
 	case types.Event:
