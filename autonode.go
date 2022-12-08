@@ -63,14 +63,20 @@ func (server *ServerNode) SetResultHandler(handler func(event types.Result) erro
 }
 
 func (server *ServerNode) Start() {
+	fmt.Printf("Starting...")
 	defer util.LogAndForget(server.Node.Close())
+	fmt.Printf("Binding overlay")
 	server.Node.Bind(server.Overlay.Protocol())
+	fmt.Printf("Listening in on specified interface")
 	util.Check(server.Node.Listen())
+	fmt.Printf("Bootstrapping from seeds...")
 	bootstrap(server.Node, server.Config.Seeds...)
+	fmt.Printf("Discovering peers...")
 	discover(server.Overlay)
+	fmt.Printf("Server started. Listening to events.")
 	for {
 		event, err := server.Events.Items.DequeueOrWaitForNextElement()
-		fmt.Printf("Received Msg: %v", event)
+		fmt.Printf("Received Msg: %v\n", event)
 		if util.LogError(err) != nil {
 			time.Sleep(100 * time.Millisecond)
 			continue
