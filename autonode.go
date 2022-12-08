@@ -7,6 +7,8 @@ import (
 	"github.com/jacohend/autonode/util"
 	"github.com/perlin-network/noise"
 	"github.com/perlin-network/noise/kademlia"
+	"net"
+	"strconv"
 	"time"
 )
 
@@ -21,7 +23,10 @@ type ServerNode struct {
 
 func NewServerNode(config Config) *ServerNode {
 	server := ServerNode{Config: config}
-	node, err := noise.NewNode(noise.WithNodeAddress(server.Config.Host))
+	host, port, _ := net.SplitHostPort(server.Config.Host)
+	ip, _ := net.ResolveIPAddr("ip", host)
+	portInt, err := strconv.ParseUint(port, 10, 16)
+	node, err := noise.NewNode(noise.WithNodeBindHost(ip.IP), noise.WithNodeBindPort(uint16(portInt)))
 	util.Check(err)
 
 	server.Node = node
