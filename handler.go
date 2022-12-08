@@ -3,6 +3,7 @@ package autonode
 import (
 	"fmt"
 	"github.com/jacohend/autonode/types"
+	"github.com/jacohend/autonode/util"
 	"github.com/perlin-network/noise"
 )
 
@@ -10,7 +11,7 @@ func (server *ServerNode) Handle(ctx noise.HandlerContext) error {
 	fmt.Printf("Data: %v\n", ctx.Data())
 
 	obj, err := ctx.DecodeMessage()
-	if err != nil {
+	if util.LogError(err) != nil {
 		return err
 	}
 
