@@ -11,7 +11,7 @@ import (
 )
 
 type ServerNode struct {
-	Config        Config
+	Config        Config `group:"autonode" namespace:"autonode"`
 	Node          *noise.Node
 	Overlay       *kademlia.Protocol
 	Events        *queue.Queue

@@ -5,7 +5,9 @@ go 1.18
 require (
 	github.com/enriquebris/goconcurrentqueue v0.7.0
 	github.com/golang/protobuf v1.5.2
+	github.com/gorilla/mux v1.8.0
 	github.com/jessevdk/go-flags v1.5.0
+	github.com/oklog/ulid/v2 v2.1.0
 	github.com/perlin-network/noise v1.1.3
 	google.golang.org/protobuf v1.28.1
 )

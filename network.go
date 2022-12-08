@@ -63,13 +63,17 @@ func (server *ServerNode) SendToNetworkBytes(id []byte, msg noise.Serializable) 
 }
 
 func (server *ServerNode) SendToNetwork(msg noise.Serializable) {
-	for _, id := range server.Overlay.Table().Peers() {
-		go server.SendToID(id, msg)
+	if server.Overlay != nil && server.Overlay.Table() != nil && server.Overlay.Table().Peers() != nil {
+		for _, id := range server.Overlay.Table().Peers() {
+			go server.SendToID(id, msg)
+		}
 	}
 }
 
 func (server *ServerNode) SendToNetworkSync(msg noise.Serializable) {
-	for _, id := range server.Overlay.Table().Peers() {
-		server.SendToID(id, msg)
+	if server.Overlay != nil && server.Overlay.Table() != nil && server.Overlay.Table().Peers() != nil {
+		for _, id := range server.Overlay.Table().Peers() {
+			server.SendToID(id, msg)
+		}
 	}
 }

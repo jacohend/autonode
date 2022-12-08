@@ -9,7 +9,7 @@ import (
 
 type Queue struct {
 	Items goconcurrentqueue.Queue
-	Lock  sync.Mutex
+	Lock  sync.Mutex //required to protect queue during removal
 }
 
 func NewQueue() *Queue {
@@ -17,11 +17,15 @@ func NewQueue() *Queue {
 }
 
 func (queue *Queue) PushItem(T any) error {
+	queue.Lock.Lock()
+	defer queue.Lock.Unlock()
 	return queue.Items.Enqueue(T)
 }
 
 func (queue *Queue) PopItem() (any, error) {
-	result, err := queue.Items.Dequeue()
+	queue.Lock.Lock()
+	defer queue.Lock.Unlock()
+	result, err := queue.Items.DequeueOrWaitForNextElement()
 	return result.(any), err
 }
 

@@ -22,8 +22,6 @@ func (server *ServerNode) Handle(ctx noise.HandlerContext) error {
 		server.Events.RemoveItemById(m.EventId)
 	case types.Result:
 		server.ResultHandler(m)
-	default:
-		server.SendToNetwork(m)
 	}
 	return nil
 }
