@@ -67,6 +67,8 @@ func (server *ServerNode) SendToNetwork(msg noise.Serializable) {
 		for _, id := range server.Overlay.Table().Peers() {
 			go server.SendToID(id, msg)
 		}
+	} else {
+		fmt.Println("Problem with Overlay- no peers")
 	}
 }
 
@@ -75,5 +77,7 @@ func (server *ServerNode) SendToNetworkSync(msg noise.Serializable) {
 		for _, id := range server.Overlay.Table().Peers() {
 			server.SendToID(id, msg)
 		}
+	} else {
+		fmt.Println("Problem with Overlay- no peers")
 	}
 }
