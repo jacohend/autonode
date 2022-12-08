@@ -25,11 +25,19 @@ func NewServerNode(config Config) *ServerNode {
 	server := ServerNode{Config: config}
 	host, port, _ := net.SplitHostPort(server.Config.Host)
 	ip, _ := net.ResolveIPAddr("ip", host)
+
 	portInt, err := strconv.ParseUint(port, 10, 16)
+	util.Check(err)
+
 	node, err := noise.NewNode(noise.WithNodeBindHost(ip.IP), noise.WithNodeBindPort(uint16(portInt)))
 	util.Check(err)
 
 	server.Node = node
+	server.Node.RegisterMessage(types.Announce{}, types.AnnounceUnmarshal)
+	server.Node.RegisterMessage(types.Time{}, types.TimeUnmarshal)
+	server.Node.RegisterMessage(types.Event{}, types.EventUnmarshal)
+	server.Node.RegisterMessage(types.Ack{}, types.AckUnmarshal)
+	server.Node.RegisterMessage(types.Result{}, types.ResultUnmarshal)
 	server.Node.Handle(server.Handle)
 
 	server.Events = queue.NewQueue()
@@ -42,7 +50,6 @@ func NewServerNode(config Config) *ServerNode {
 			fmt.Printf("Removed peer %s(%s).\n", id.Address, id.ID.String()[:printedLength])
 		},
 	}))
-	server.Node.Bind(server.Overlay.Protocol())
 
 	return &server
 }
@@ -57,12 +64,14 @@ func (server *ServerNode) SetResultHandler(handler func(event types.Result) erro
 
 func (server *ServerNode) Start() {
 	defer util.LogAndForget(server.Node.Close())
+	server.Node.Bind(server.Overlay.Protocol())
 	util.Check(server.Node.Listen())
 	bootstrap(server.Node, server.Config.Seeds...)
 	discover(server.Overlay)
 	for {
 		event, err := server.Events.Items.DequeueOrWaitForNextElement()
-		if err != nil {
+		fmt.Printf("Received Msg: %v", event)
+		if util.LogError(err) != nil {
 			time.Sleep(100 * time.Millisecond)
 			continue
 		}
