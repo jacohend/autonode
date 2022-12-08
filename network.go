@@ -6,6 +6,7 @@ import (
 	"github.com/jacohend/autonode/util"
 	"github.com/perlin-network/noise"
 	"github.com/perlin-network/noise/kademlia"
+	"reflect"
 	"strings"
 	"time"
 )
@@ -65,7 +66,7 @@ func (server *ServerNode) SendToNetworkBytes(id []byte, msg noise.Serializable) 
 func (server *ServerNode) SendToNetwork(msg noise.Serializable) {
 	if server.Overlay != nil && server.Overlay.Table() != nil && server.Overlay.Table().Peers() != nil {
 		for _, id := range server.Overlay.Table().Peers() {
-			fmt.Printf("Sending to ID %v\n", id)
+			fmt.Printf("Sending %s to ID %v\n", reflect.TypeOf(msg), id)
 			go server.SendToID(id, msg)
 		}
 	} else {
@@ -76,7 +77,7 @@ func (server *ServerNode) SendToNetwork(msg noise.Serializable) {
 func (server *ServerNode) SendToNetworkSync(msg noise.Serializable) {
 	if server.Overlay != nil && server.Overlay.Table() != nil && server.Overlay.Table().Peers() != nil {
 		for _, id := range server.Overlay.Table().Peers() {
-			fmt.Printf("Sending to ID %v\n", id)
+			fmt.Printf("Sending %s to ID %v\n", reflect.TypeOf(msg), id)
 			server.SendToID(id, msg)
 		}
 	} else {
