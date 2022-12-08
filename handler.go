@@ -14,15 +14,18 @@ func (server *ServerNode) Handle(ctx noise.HandlerContext) error {
 	if util.LogError(err) != nil {
 		return err
 	}
-	fmt.Printf("Data: %#v\n", obj)
 
 	switch m := obj.(type) {
 	case types.Event:
-		server.Events.PushItem(m)
+		fmt.Println("Received Event Msg")
+		util.LogAndForget(server.Events.PushItem(m))
 	case types.Ack:
-		server.Events.RemoveItemById(m.EventId)
+		fmt.Println("Received Ack Msg")
+		util.LogAndForget(server.Events.RemoveItemById(m.EventId))
 	case types.Result:
-		server.ResultHandler(m)
+		fmt.Println("Received Result Msg")
+		util.LogAndForget(server.ResultHandler(m))
 	}
+
 	return nil
 }

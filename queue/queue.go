@@ -23,8 +23,6 @@ func (queue *Queue) PushItem(T any) error {
 }
 
 func (queue *Queue) PopItem() (any, error) {
-	queue.Lock.Lock()
-	defer queue.Lock.Unlock()
 	result, err := queue.Items.DequeueOrWaitForNextElement()
 	return result.(any), err
 }
