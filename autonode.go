@@ -29,7 +29,9 @@ func NewServerNode(config Config) *ServerNode {
 	portInt, err := strconv.ParseUint(port, 10, 16)
 	util.Check(err)
 
-	node, err := noise.NewNode(noise.WithNodeBindHost(ip.IP), noise.WithNodeBindPort(uint16(portInt)))
+	node, err := noise.NewNode(noise.WithNodeBindHost(ip.IP),
+		noise.WithNodeBindPort(uint16(portInt)),
+		noise.WithNodeAddress(server.Config.Host))
 	util.Check(err)
 
 	server.Node = node
