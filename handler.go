@@ -8,9 +8,6 @@ import (
 
 func (server *ServerNode) Handle(ctx noise.HandlerContext) error {
 	fmt.Printf("Data: %v\n", ctx.Data())
-	if !ctx.IsRequest() {
-		return nil
-	}
 
 	obj, err := ctx.DecodeMessage()
 	if err != nil {
