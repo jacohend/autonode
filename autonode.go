@@ -64,7 +64,7 @@ func (server *ServerNode) SetResultHandler(handler func(event types.Result) erro
 
 func (server *ServerNode) Start() {
 	fmt.Printf("Starting...")
-	defer util.LogAndForget(server.Node.Close())
+	defer server.Node.Close()
 	fmt.Printf("Binding overlay")
 	server.Node.Bind(server.Overlay.Protocol())
 	fmt.Printf("Listening in on specified interface")
