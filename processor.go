@@ -69,6 +69,7 @@ func (processor *Processor) AddResult(result types.Result) {
 	id := util.BytesToUlid(result.EventId)
 	if _, exists := processor.State[id]; exists {
 		processor.State[id].Result = &result
+		fmt.Printf("AddResult %s: %#v", util.BytesToUlid(result.EventId), result)
 	}
 }
 
@@ -78,7 +79,7 @@ func (processor *Processor) WaitForResult(idbytes []byte) *types.Result {
 	t := time.Now()
 	timeout := t.Add(10 * time.Second)
 	for !t.After(timeout) {
-		os.Stdout.Write([]byte(fmt.Sprintf("State: %v\n", processor.State)))
+		os.Stdout.Write([]byte(fmt.Sprintf("State: %#v\n", processor.State[id])))
 		if s, exists := processor.State[id]; exists && s.Result != nil {
 			return s.Result
 		}

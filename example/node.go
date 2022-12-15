@@ -89,6 +89,6 @@ func ApiEventHandler(event types.Event) (types.Result, error) {
 }
 
 func ApiResultHandler(result types.Result) error {
-	fmt.Printf("Result: %#v", result)
+	fmt.Printf("Result Handler %s: %#v", util.BytesToUlid(result.EventId), result)
 	return nil
 }

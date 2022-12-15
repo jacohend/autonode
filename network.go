@@ -39,7 +39,7 @@ func (server *ServerNode) SendToID(id noise.ID, msg noise.Serializable) error {
 	return nil
 }
 
-func (server *ServerNode) SendToNetworkBytes(id []byte, msg noise.Serializable) {
+func (server *ServerNode) SendToIdBytes(id []byte, msg noise.Serializable) {
 	sendId, err := noise.UnmarshalID(id)
 	if util.LogError(err) != nil {
 		return
@@ -70,12 +70,12 @@ func (server *ServerNode) SendToNetworkSync(msg noise.Serializable) {
 }
 
 func (server *ServerNode) DispatchRandom(msg types.Event) {
-	server.Events.NewEvent(msg, true)
 	if server.overlayCheck() {
+		server.Events.NewEvent(msg, true)
 		peers := server.Overlay.Table().Peers()
 		result := leaderelection.ElectLeaders(peers, 1, time.Now().String()).([]noise.ID)
 		if len(result) > 0 {
-			server.SendToID(result[0], msg)
+			go server.SendToID(result[0], msg)
 		}
 	}
 }

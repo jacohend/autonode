@@ -93,5 +93,5 @@ func (server *ServerNode) ProcessEvent(event types.Event) {
 	server.SendToNetworkSync(ack)
 	result, err := server.Events.EventHandler(event)
 	util.LogAndForget(err)
-	server.SendToNetworkBytes(event.NodeId, result)
+	server.SendToIdBytes(event.NodeId, result)
 }
