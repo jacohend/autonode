@@ -63,10 +63,10 @@ func ApiHandler(w http.ResponseWriter, r *http.Request) {
 		Id:        ulid.Bytes(),
 		Key:       "SAMPLE_EVENT",
 		Value:     []byte("sample event"),
-		Timestamp: nil,
+		Timestamp: util.Now(),
 	})
 	result := server.Events.WaitForResult(ulid.Bytes())
-	if result == nil {
+	if result != nil {
 		resultbytes, _ := json.Marshal(result)
 		w.Write(resultbytes)
 		w.WriteHeader(http.StatusOK)
