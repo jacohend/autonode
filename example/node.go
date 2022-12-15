@@ -76,6 +76,7 @@ func ApiHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+// this runs on the worker
 func ApiEventHandler(event types.Event) (types.Result, error) {
 	// do some work here, then dispatch result
 	return types.Result{

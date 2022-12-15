@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	leaderelection "github.com/chainpoint/leader-election"
+	"github.com/jacohend/autonode/types"
 	"github.com/jacohend/autonode/util"
 	"github.com/perlin-network/noise"
 	"reflect"
@@ -68,7 +69,8 @@ func (server *ServerNode) SendToNetworkSync(msg noise.Serializable) {
 	}
 }
 
-func (server *ServerNode) DispatchRandom(msg noise.Serializable) {
+func (server *ServerNode) DispatchRandom(msg types.Event) {
+	server.Events.NewEvent(msg, true)
 	if server.overlayCheck() {
 		peers := server.Overlay.Table().Peers()
 		result := leaderelection.ElectLeaders(peers, 1, time.Now().String()).([]noise.ID)
