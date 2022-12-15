@@ -84,11 +84,13 @@ func (server *ServerNode) Start() {
 }
 
 func (server *ServerNode) ProcessEvent(event types.Event) {
-	server.SendToNetworkSync(types.Ack{
+	ack := types.Ack{
 		NodeId:    server.Node.ID().Marshal(),
 		EventId:   event.Id,
 		Timestamp: util.Now(),
-	})
+	}
+	defer server.Events.AcknowledgeEvent(ack)
+	server.SendToNetworkSync(ack)
 	result, err := server.Events.EventHandler(event)
 	util.LogAndForget(err)
 	server.SendToNetworkBytes(event.NodeId, result)
