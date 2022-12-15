@@ -78,7 +78,7 @@ func (processor *Processor) WaitForResult(idbytes []byte) *types.Result {
 	t := time.Now()
 	timeout := t.Add(10 * time.Second)
 	for !t.After(timeout) {
-		os.Stdout.Write([]byte(fmt.Sprintf("State: %#v\n\n", processor.State)))
+		os.Stdout.Write([]byte(fmt.Sprintf("State: %v\n", processor.State)))
 		if s, exists := processor.State[id]; exists && s.Result != nil {
 			return s.Result
 		}
