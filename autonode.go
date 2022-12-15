@@ -2,23 +2,19 @@ package autonode
 
 import (
 	"fmt"
-	"github.com/jacohend/autonode/queue"
 	"github.com/jacohend/autonode/types"
 	"github.com/jacohend/autonode/util"
 	"github.com/perlin-network/noise"
 	"github.com/perlin-network/noise/kademlia"
 	"net"
 	"strconv"
-	"time"
 )
 
 type ServerNode struct {
-	Config        Config
-	Node          *noise.Node
-	Overlay       *kademlia.Protocol
-	Events        *queue.Queue
-	EventHandler  func(event types.Event) (types.Result, error)
-	ResultHandler func(event types.Result) error
+	Config  Config
+	Node    *noise.Node
+	Overlay *kademlia.Protocol
+	Events  *Processor
 }
 
 func NewServerNode(config Config) *ServerNode {
@@ -42,7 +38,8 @@ func NewServerNode(config Config) *ServerNode {
 	server.Node.RegisterMessage(types.Result{}, types.ResultUnmarshal)
 	server.Node.Handle(server.Handle)
 
-	server.Events = queue.NewQueue()
+	server.Events = NewEventProcessor()
+	server.SetEventProcessor(server.ProcessEvent)
 
 	server.Overlay = kademlia.New(kademlia.WithProtocolEvents(kademlia.Events{
 		OnPeerAdmitted: func(id noise.ID) {
@@ -56,12 +53,19 @@ func NewServerNode(config Config) *ServerNode {
 	return &server
 }
 
-func (server *ServerNode) SetEventHandler(handler func(event types.Event) (types.Result, error)) {
-	server.EventHandler = handler
+//Internal method
+func (server *ServerNode) SetEventProcessor(handler func(event types.Event)) {
+	server.Events.Process = handler
 }
 
+//External method- for devs
+func (server *ServerNode) SetEventHandler(handler func(event types.Event) (types.Result, error)) {
+	server.Events.EventHandler = handler
+}
+
+//External method- for devs
 func (server *ServerNode) SetResultHandler(handler func(event types.Result) error) {
-	server.ResultHandler = handler
+	server.Events.ResultHandler = handler
 }
 
 func (server *ServerNode) Start() {
@@ -74,17 +78,9 @@ func (server *ServerNode) Start() {
 	fmt.Println("Bootstrapping from seeds...")
 	bootstrap(server.Node, server.Config.Seeds...)
 	fmt.Println("Discovering peers...")
-	discover(server.Overlay)
+	server.Overlay.Discover()
 	fmt.Println("Server started. Listening to events.")
-	for {
-		event, err := server.Events.PopItem()
-		fmt.Printf("Received Msg: %v\n", event)
-		if util.LogError(err) != nil {
-			time.Sleep(100 * time.Millisecond)
-			continue
-		}
-		go server.ProcessEvent(event.(types.Event))
-	}
+	server.Events.Start()
 }
 
 func (server *ServerNode) ProcessEvent(event types.Event) {
@@ -93,7 +89,7 @@ func (server *ServerNode) ProcessEvent(event types.Event) {
 		EventId:   event.Id,
 		Timestamp: util.Now(),
 	})
-	result, err := server.EventHandler(event)
+	result, err := server.Events.EventHandler(event)
 	util.LogAndForget(err)
 	server.SendToNetworkBytes(event.NodeId, result)
 }

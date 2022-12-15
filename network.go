@@ -3,11 +3,10 @@ package autonode
 import (
 	"context"
 	"fmt"
+	leaderelection "github.com/chainpoint/leader-election"
 	"github.com/jacohend/autonode/util"
 	"github.com/perlin-network/noise"
-	"github.com/perlin-network/noise/kademlia"
 	"reflect"
-	"strings"
 	"time"
 )
 
@@ -21,22 +20,6 @@ func bootstrap(node *noise.Node, addresses ...string) {
 			fmt.Printf("Failed to ping bootstrap node (%s). Skipping... [error: %s]\n", addr, err)
 			continue
 		}
-	}
-}
-
-// discover uses Kademlia to discover new peers from nodes we already are aware of.
-func discover(overlay *kademlia.Protocol) {
-	ids := overlay.Discover()
-
-	var str []string
-	for _, id := range ids {
-		str = append(str, fmt.Sprintf("%s(%s)", id.Address, id.ID.String()[:printedLength]))
-	}
-
-	if len(ids) > 0 {
-		fmt.Printf("Discovered %d peer(s): [%v]\n", len(ids), strings.Join(str, ", "))
-	} else {
-		fmt.Printf("Did not discover any peers.\n")
 	}
 }
 
@@ -64,7 +47,7 @@ func (server *ServerNode) SendToNetworkBytes(id []byte, msg noise.Serializable) 
 }
 
 func (server *ServerNode) SendToNetwork(msg noise.Serializable) {
-	if server.Overlay != nil && server.Overlay.Table() != nil && server.Overlay.Table().Peers() != nil {
+	if server.overlayCheck() {
 		for _, id := range server.Overlay.Table().Peers() {
 			fmt.Printf("Sending %s to ID %v\n", reflect.TypeOf(msg), id)
 			go server.SendToID(id, msg)
@@ -75,7 +58,7 @@ func (server *ServerNode) SendToNetwork(msg noise.Serializable) {
 }
 
 func (server *ServerNode) SendToNetworkSync(msg noise.Serializable) {
-	if server.Overlay != nil && server.Overlay.Table() != nil && server.Overlay.Table().Peers() != nil {
+	if server.overlayCheck() {
 		for _, id := range server.Overlay.Table().Peers() {
 			fmt.Printf("Sending %s to ID %v\n", reflect.TypeOf(msg), id)
 			server.SendToID(id, msg)
@@ -83,4 +66,18 @@ func (server *ServerNode) SendToNetworkSync(msg noise.Serializable) {
 	} else {
 		fmt.Println("Problem with Overlay- no peers")
 	}
+}
+
+func (server *ServerNode) DispatchRandom(msg noise.Serializable) {
+	if server.overlayCheck() {
+		peers := server.Overlay.Table().Peers()
+		result := leaderelection.ElectLeaders(peers, 1, time.Now().String()).([]noise.ID)
+		if len(result) > 0 {
+			server.SendToID(result[0], msg)
+		}
+	}
+}
+
+func (server *ServerNode) overlayCheck() bool {
+	return server.Overlay != nil && server.Overlay.Table() != nil && server.Overlay.Table().Peers() != nil
 }
