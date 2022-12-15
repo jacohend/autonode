@@ -12,7 +12,7 @@ import (
 )
 
 type Processor struct {
-	State         map[ulid.ULID]EventStateMachine
+	State         map[ulid.ULID]*EventStateMachine
 	Events        *queue.Queue
 	Process       func(event types.Event)
 	EventHandler  func(event types.Event) (types.Result, error)
@@ -29,7 +29,7 @@ type EventStateMachine struct {
 
 func NewEventProcessor() *Processor {
 	return &Processor{
-		State:  make(map[ulid.ULID]EventStateMachine),
+		State:  make(map[ulid.ULID]*EventStateMachine),
 		Events: queue.NewQueue(),
 	}
 }
@@ -40,7 +40,7 @@ func (processor *Processor) NewEvent(event types.Event, dispatching bool) {
 	id := util.BytesToUlid(event.Id)
 	if _, exists := processor.State[id]; !exists {
 		processor.Events.PushItem(event)
-		processor.State[id] = EventStateMachine{
+		processor.State[id] = &EventStateMachine{
 			Dispatcher: dispatching,
 			Event:      &event,
 			Ack:        nil,
@@ -67,8 +67,8 @@ func (processor *Processor) AddResult(result types.Result) {
 	processor.Lock.Lock()
 	defer processor.Lock.Unlock()
 	id := util.BytesToUlid(result.EventId)
-	if s, exists := processor.State[id]; exists {
-		s.Result = &result
+	if _, exists := processor.State[id]; exists {
+		processor.State[id].Result = &result
 	}
 }
 
