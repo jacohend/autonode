@@ -52,11 +52,11 @@ func (queue *Queue) RemoveItemById(id []byte) error {
 	finder := goconcurrentqueue.NewFIFO()
 	i := queue.Items.GetLen()
 	for i >= 0 {
-		item, err := queue.PopItem()
+		item, err := queue.Items.Dequeue()
 		if err != nil {
 			return err
 		}
-		if bytes.Compare(item.Id, id) == 0 {
+		if bytes.Compare(item.(types.Event).Id, id) == 0 {
 			finder.Enqueue(item)
 		}
 		i--
