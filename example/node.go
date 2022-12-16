@@ -66,8 +66,10 @@ func ApiHandler(w http.ResponseWriter, r *http.Request) {
 		Timestamp: util.Now(),
 	})
 	result := server.EventProcessor.WaitForResult(ulid.Bytes())
+	fmt.Println("Received Result in API Handler")
 	if result != nil {
-		resultbytes, _ := json.Marshal(result)
+		resultbytes, err := json.Marshal(result)
+		util.LogAndForget(err)
 		w.Write(resultbytes)
 		w.WriteHeader(http.StatusOK)
 	} else {
