@@ -88,8 +88,6 @@ func (server *ServerNode) Start() {
 }
 
 func (server *ServerNode) ProcessEvent(event types.Event) {
-	//skip processing this if we dispatched it?
-
 	ack := types.Ack{
 		NodeId:    server.Node.ID().Marshal(),
 		EventId:   event.Id,

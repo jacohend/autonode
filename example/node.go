@@ -71,8 +71,8 @@ func ApiHandler(w http.ResponseWriter, r *http.Request) {
 	if result != nil {
 		resultbytes, err := json.Marshal(result)
 		util.LogAndForget(err)
-		w.Write(resultbytes)
 		w.WriteHeader(http.StatusOK)
+		w.Write(resultbytes)
 	} else {
 		w.WriteHeader(http.StatusInternalServerError)
 	}

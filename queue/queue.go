@@ -33,11 +33,11 @@ func (queue *Queue) RemoveItem(msg types.Event) error {
 	finder := goconcurrentqueue.NewFIFO()
 	i := queue.Items.GetLen()
 	for i >= 0 {
-		item, err := queue.PopItem()
+		item, err := queue.Items.Dequeue()
 		if err != nil {
 			return err
 		}
-		if bytes.Compare(item.Id, msg.Id) == 0 {
+		if bytes.Compare(item.(types.Event).Id, msg.Id) == 0 {
 			finder.Enqueue(item)
 		}
 		i--

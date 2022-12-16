@@ -26,6 +26,7 @@ type EventStateMachine struct {
 	Event      *types.Event
 	Ack        *types.Ack
 	Result     *types.Result
+	ResultSub  chan types.Result
 }
 
 func NewEventProcessor() *Processor {
@@ -45,6 +46,7 @@ func (processor *Processor) NewEvent(event types.Event, dispatching bool) {
 			Event:      &event,
 			Ack:        nil,
 			Result:     nil,
+			ResultSub:  make(chan types.Result),
 		}
 		os.Stdout.Write([]byte(fmt.Sprintf("Item: %#v\n", processor.State[id.String()])))
 		os.Stdout.Write([]byte(fmt.Sprintf("State: %#v\n", processor.State)))
@@ -59,7 +61,7 @@ func (processor *Processor) AcknowledgeEvent(ack types.Ack) {
 		if !s.Dispatcher {
 			fmt.Printf("Deleting event id %s\n", id.String())
 			delete(processor.State, id.String())
-			processor.Events.RemoveItemById(ack.EventId)
+			go processor.Events.RemoveItemById(ack.EventId)
 		} else {
 			fmt.Printf("Storing ack for event id %s\n", id.String())
 			s.Ack = &ack
@@ -72,21 +74,22 @@ func (processor *Processor) AddResult(result types.Result) {
 	defer processor.Lock.Unlock()
 	if id, _, exists := processor.GetEvent(result.EventId); exists {
 		processor.State[id.String()].Result = &result
+		processor.State[id.String()].ResultSub <- result
 		fmt.Printf("AddResult %s: %#v\n", util.BytesToUlid(result.EventId), result)
 	}
 }
 
 func (processor *Processor) WaitForResult(idbytes []byte) *types.Result {
 	defer processor.CompleteEvent(idbytes)
-	t := time.Now()
-	timeout := t.Add(10 * time.Second)
-	for !t.After(timeout) {
-		if _, s, exists := processor.GetEvent(idbytes); exists && s.Result != nil {
+	if _, s, exists := processor.GetEvent(idbytes); exists {
+		select {
+		case result := <-s.ResultSub:
 			fmt.Println("Found Result")
-			return s.Result
+			return &result
+		case <-time.After(10 * time.Second):
+			fmt.Println("Timed out waiting for Result")
+			return nil
 		}
-		t = time.Now()
-		time.Sleep(time.Millisecond * 60)
 	}
 	return nil
 }
@@ -121,7 +124,7 @@ func (processor *Processor) Start() {
 			os.Stdout.Write([]byte("We're the dispatcher and we have workers; skipping self-assignment\n"))
 			processor.Events.PushItem(event)
 			time.Sleep(100 * time.Millisecond)
-			return
+			continue
 		}
 
 		if util.LogError(err) != nil {
