@@ -116,6 +116,8 @@ func (processor *Processor) Start() {
 		fmt.Printf("Event State: %t, %v", exists, s)
 		if exists && (s.Dispatcher && !processor.Standalone) {
 			os.Stdout.Write([]byte("We're the dispatcher and we have workers; skipping self-assignment\n"))
+			processor.Events.PushItem(event)
+			time.Sleep(100 * time.Millisecond)
 			return
 		}
 
