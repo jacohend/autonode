@@ -6,7 +6,6 @@ import (
 	"github.com/jacohend/autonode/types"
 	"github.com/jacohend/autonode/util"
 	"github.com/oklog/ulid/v2"
-	"os"
 	"sync"
 	"time"
 )
@@ -48,8 +47,6 @@ func (processor *Processor) NewEvent(event types.Event, dispatching bool) {
 			Result:     nil,
 			ResultSub:  make(chan types.Result),
 		}
-		os.Stdout.Write([]byte(fmt.Sprintf("Item: %#v\n", processor.State[id.String()])))
-		os.Stdout.Write([]byte(fmt.Sprintf("State: %#v\n", processor.State)))
 		processor.Events.PushItem(event)
 	}
 }
@@ -121,7 +118,7 @@ func (processor *Processor) Start() {
 		_, s, exists := processor.GetEvent(event.Id)
 		fmt.Printf("Event State: %t, %v", exists, s)
 		if exists && (s.Dispatcher && !processor.Standalone) {
-			os.Stdout.Write([]byte("We're the dispatcher and we have workers; skipping self-assignment\n"))
+			fmt.Printf("We're the dispatcher and we have workers; skipping self-assignment\n")
 			processor.Events.PushItem(event)
 			time.Sleep(100 * time.Millisecond)
 			continue

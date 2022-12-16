@@ -10,7 +10,6 @@ import (
 	"github.com/jacohend/autonode/util"
 	"github.com/jessevdk/go-flags"
 	"net/http"
-	"os"
 	"time"
 )
 
@@ -67,7 +66,6 @@ func ApiHandler(w http.ResponseWriter, r *http.Request) {
 		Timestamp: util.Now(),
 	})
 	result := server.EventProcessor.WaitForResult(ulid.Bytes())
-	os.Stdout.Write([]byte("Received Result in API Handler\n"))
 	if result != nil {
 		resultbytes, err := json.Marshal(result)
 		util.LogAndForget(err)
