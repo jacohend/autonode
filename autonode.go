@@ -7,6 +7,7 @@ import (
 	"github.com/perlin-network/noise"
 	"github.com/perlin-network/noise/kademlia"
 	"net"
+	"os"
 	"strconv"
 )
 
@@ -87,7 +88,7 @@ func (server *ServerNode) ProcessEvent(event types.Event) {
 	numPeers, _ := server.Peers()
 	//skip processing this if we dispatched it?
 	if _, s, exists := server.EventProcessor.GetEvent(event.Id); exists && (s.Dispatcher && numPeers > 0) {
-		fmt.Printf("We're the dispatcher and we have workers; skipping self-assignment\n")
+		os.Stdout.Write([]byte("We're the dispatcher and we have workers; skipping self-assignment\n"))
 		return
 	}
 	ack := types.Ack{

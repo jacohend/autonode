@@ -38,13 +38,13 @@ func (processor *Processor) NewEvent(event types.Event, dispatching bool) {
 	processor.Lock.Lock()
 	defer processor.Lock.Unlock()
 	if id, _, exists := processor.GetEvent(event.Id); !exists {
-		processor.Events.PushItem(event)
 		processor.State[id] = &EventStateMachine{
 			Dispatcher: dispatching,
 			Event:      &event,
 			Ack:        nil,
 			Result:     nil,
 		}
+		processor.Events.PushItem(event)
 	}
 }
 
