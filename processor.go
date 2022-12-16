@@ -53,9 +53,11 @@ func (processor *Processor) AcknowledgeEvent(ack types.Ack) {
 	defer processor.Lock.Unlock()
 	if id, s, exists := processor.GetEvent(ack.EventId); exists {
 		if !s.Dispatcher {
+			fmt.Printf("Deleting event id %s", id.String())
 			delete(processor.State, id)
 			processor.Events.RemoveItemById(ack.EventId)
 		} else {
+			fmt.Printf("Storing ack for event id %s", id.String())
 			s.Ack = &ack
 		}
 	}
