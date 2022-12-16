@@ -106,13 +106,13 @@ func (processor *Processor) GetEvent(idbytes []byte) (ulid.ULID, *EventStateMach
 func (processor *Processor) Start() {
 	for {
 		event, err := processor.Events.PopItem()
-		fmt.Println("Received Event")
+		fmt.Printf("Processing Event: %v\n", event)
 
 		if util.LogError(err) != nil {
 			time.Sleep(100 * time.Millisecond)
 			continue
 		}
-		go processor.Process(event.(types.Event))
+		go processor.Process(event)
 	}
 }
 

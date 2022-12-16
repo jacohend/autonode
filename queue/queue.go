@@ -16,18 +16,18 @@ func NewQueue() *Queue {
 	return &Queue{Items: goconcurrentqueue.NewFIFO()}
 }
 
-func (queue *Queue) PushItem(T any) error {
+func (queue *Queue) PushItem(msg types.Event) error {
 	queue.Lock.Lock()
 	defer queue.Lock.Unlock()
-	return queue.Items.Enqueue(T)
+	return queue.Items.Enqueue(msg)
 }
 
-func (queue *Queue) PopItem() (any, error) {
+func (queue *Queue) PopItem() (types.Event, error) {
 	result, err := queue.Items.DequeueOrWaitForNextElement()
-	return result.(any), err
+	return result.(types.Event), err
 }
 
-func (queue *Queue) RemoveItem(T any) error {
+func (queue *Queue) RemoveItem(msg types.Event) error {
 	queue.Lock.Lock()
 	defer queue.Lock.Unlock()
 	finder := goconcurrentqueue.NewFIFO()
@@ -37,7 +37,7 @@ func (queue *Queue) RemoveItem(T any) error {
 		if err != nil {
 			return err
 		}
-		if item != T {
+		if bytes.Compare(item.Id, msg.Id) == 0 {
 			finder.Enqueue(item)
 		}
 		i--
@@ -56,7 +56,7 @@ func (queue *Queue) RemoveItemById(id []byte) error {
 		if err != nil {
 			return err
 		}
-		if bytes.Compare(item.(types.Event).Id, id) == 0 {
+		if bytes.Compare(item.Id, id) == 0 {
 			finder.Enqueue(item)
 		}
 		i--
