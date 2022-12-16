@@ -84,6 +84,12 @@ func (server *ServerNode) Start() {
 }
 
 func (server *ServerNode) ProcessEvent(event types.Event) {
+	numPeers, _ := server.Peers()
+	//skip processing this if we dispatched it?
+	if _, s, exists := server.Events.GetEvent(event.Id); exists && (s.Dispatcher && numPeers > 0) {
+		fmt.Printf("We're the dispatcher and we have workers; skipping self-assignment")
+		return
+	}
 	ack := types.Ack{
 		NodeId:    server.Node.ID().Marshal(),
 		EventId:   event.Id,

@@ -37,8 +37,7 @@ func NewEventProcessor() *Processor {
 func (processor *Processor) NewEvent(event types.Event, dispatching bool) {
 	processor.Lock.Lock()
 	defer processor.Lock.Unlock()
-	id := util.BytesToUlid(event.Id)
-	if _, exists := processor.State[id]; !exists {
+	if id, _, exists := processor.GetEvent(event.Id); exists {
 		processor.Events.PushItem(event)
 		processor.State[id] = &EventStateMachine{
 			Dispatcher: dispatching,
@@ -52,8 +51,7 @@ func (processor *Processor) NewEvent(event types.Event, dispatching bool) {
 func (processor *Processor) AcknowledgeEvent(ack types.Ack) {
 	processor.Lock.Lock()
 	defer processor.Lock.Unlock()
-	id := util.BytesToUlid(ack.EventId)
-	if s, exists := processor.State[id]; exists {
+	if id, s, exists := processor.GetEvent(ack.EventId); exists {
 		if !s.Dispatcher {
 			delete(processor.State, id)
 			processor.Events.RemoveItemById(ack.EventId)
@@ -66,8 +64,7 @@ func (processor *Processor) AcknowledgeEvent(ack types.Ack) {
 func (processor *Processor) AddResult(result types.Result) {
 	processor.Lock.Lock()
 	defer processor.Lock.Unlock()
-	id := util.BytesToUlid(result.EventId)
-	if _, exists := processor.State[id]; exists {
+	if id, _, exists := processor.GetEvent(result.EventId); exists {
 		processor.State[id].Result = &result
 		fmt.Printf("AddResult %s: %#v", util.BytesToUlid(result.EventId), result)
 	}
@@ -80,7 +77,7 @@ func (processor *Processor) WaitForResult(idbytes []byte) *types.Result {
 	timeout := t.Add(10 * time.Second)
 	for !t.After(timeout) {
 		os.Stdout.Write([]byte(fmt.Sprintf("State: %#v\n", processor.State[id])))
-		if s, exists := processor.State[id]; exists && s.Result != nil {
+		if _, s, exists := processor.GetEvent(idbytes); exists && s.Result != nil {
 			return s.Result
 		}
 		t = time.Now()
@@ -92,11 +89,18 @@ func (processor *Processor) WaitForResult(idbytes []byte) *types.Result {
 func (processor *Processor) CompleteEvent(idbytes []byte) {
 	processor.Lock.Lock()
 	defer processor.Lock.Unlock()
-	id := util.BytesToUlid(idbytes)
-	if _, exists := processor.State[id]; exists {
+	if id, _, exists := processor.GetEvent(idbytes); exists {
 		delete(processor.State, id)
 		processor.Events.RemoveItemById(idbytes)
 	}
+}
+
+func (processor *Processor) GetEvent(idbytes []byte) (ulid.ULID, *EventStateMachine, bool) {
+	id := util.BytesToUlid(idbytes)
+	if _, exists := processor.State[id]; exists {
+		return id, processor.State[id], true
+	}
+	return id, nil, false
 }
 
 func (processor *Processor) Start() {

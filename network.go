@@ -84,3 +84,10 @@ func (server *ServerNode) DispatchRandom(msg types.Event) {
 func (server *ServerNode) overlayCheck() bool {
 	return server.Overlay != nil && server.Overlay.Table() != nil && server.Overlay.Table().Peers() != nil
 }
+
+func (server *ServerNode) Peers() (int, []noise.ID) {
+	if server.overlayCheck() {
+		return len(server.Overlay.Table().Peers()), server.Overlay.Table().Peers()
+	}
+	return 0, []noise.ID{}
+}
