@@ -75,6 +75,7 @@ func (server *ServerNode) DispatchRandom(msg types.Event) {
 		peers := server.Overlay.Table().Peers()
 		result := leaderelection.ElectLeaders(peers, 1, time.Now().String()).([]noise.ID)
 		if len(result) > 0 {
+			fmt.Printf("Dispatching Event to %s\n", result[0])
 			go server.SendToID(result[0], msg)
 		}
 	}
