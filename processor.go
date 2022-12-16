@@ -81,7 +81,7 @@ func (processor *Processor) WaitForResult(idbytes []byte) *types.Result {
 	t := time.Now()
 	timeout := t.Add(10 * time.Second)
 	for !t.After(timeout) {
-		os.Stdout.Write([]byte(fmt.Sprintf("State: %#v\n", processor.State[id.String()])))
+		os.Stdout.Write([]byte(fmt.Sprintf("Checking State: %#v\n", processor.State[id.String()])))
 		if _, s, exists := processor.GetEvent(idbytes); exists && s.Result != nil {
 			return s.Result
 		}
@@ -102,8 +102,8 @@ func (processor *Processor) CompleteEvent(idbytes []byte) {
 
 func (processor *Processor) GetEvent(idbytes []byte) (ulid.ULID, *EventStateMachine, bool) {
 	id := util.BytesToUlid(idbytes)
-	os.Stdout.Write([]byte(fmt.Sprintf("GetEvent Item: %#v\n", processor.State[id.String()])))
-	os.Stdout.Write([]byte(fmt.Sprintf("GetEvent State: %#v\n", processor.State)))
+	os.Stdout.Write([]byte(fmt.Sprintf("GetEvent Item %s: %#v\n", id.String(), processor.State[id.String()])))
+	os.Stdout.Write([]byte(fmt.Sprintf("GetEvent State %s: %#v\n", id.String(), processor.State)))
 	if _, exists := processor.State[id.String()]; exists {
 		return id, processor.State[id.String()], true
 	}
