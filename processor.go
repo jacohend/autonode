@@ -17,6 +17,7 @@ type Processor struct {
 	Process       func(event types.Event)
 	EventHandler  func(event types.Event) (types.Result, error)
 	ResultHandler func(event types.Result) error
+	Standalone    bool
 	Lock          sync.Mutex //required to protect queue during removal
 }
 
@@ -77,13 +78,10 @@ func (processor *Processor) AddResult(result types.Result) {
 
 func (processor *Processor) WaitForResult(idbytes []byte) *types.Result {
 	defer processor.CompleteEvent(idbytes)
-	id := util.BytesToUlid(idbytes)
 	t := time.Now()
 	timeout := t.Add(10 * time.Second)
 	for !t.After(timeout) {
-		os.Stdout.Write([]byte(fmt.Sprintf("Checking State: %#v\n", processor.State[id.String()])))
 		if _, s, exists := processor.GetEvent(idbytes); exists && s.Result != nil {
-			os.Stdout.Write([]byte(fmt.Sprintf("Found Result: %#v\n", s.Result)))
 			return s.Result
 		}
 		t = time.Now()
@@ -93,18 +91,16 @@ func (processor *Processor) WaitForResult(idbytes []byte) *types.Result {
 }
 
 func (processor *Processor) CompleteEvent(idbytes []byte) {
-	processor.Lock.Lock()
-	defer processor.Lock.Unlock()
 	if id, _, exists := processor.GetEvent(idbytes); exists {
+		fmt.Println("Deleting event...")
 		delete(processor.State, id.String())
-		processor.Events.RemoveItemById(idbytes)
+		util.LogAndForget(processor.Events.RemoveItemById(idbytes))
+		fmt.Println("Deletion finished")
 	}
 }
 
 func (processor *Processor) GetEvent(idbytes []byte) (ulid.ULID, *EventStateMachine, bool) {
 	id := util.BytesToUlid(idbytes)
-	os.Stdout.Write([]byte(fmt.Sprintf("GetEvent Item %s: %#v\n", id.String(), processor.State[id.String()])))
-	os.Stdout.Write([]byte(fmt.Sprintf("GetEvent State %s: %#v\n", id.String(), processor.State)))
 	if _, exists := processor.State[id.String()]; exists {
 		return id, processor.State[id.String()], true
 	}
@@ -115,6 +111,13 @@ func (processor *Processor) Start() {
 	for {
 		event, err := processor.Events.PopItem()
 		fmt.Printf("Processing Event: %v\n", event)
+
+		_, s, exists := processor.GetEvent(event.Id)
+		fmt.Printf("Event State: %t, %v", exists, s)
+		if exists && (s.Dispatcher && !processor.Standalone) {
+			os.Stdout.Write([]byte("We're the dispatcher and we have workers; skipping self-assignment\n"))
+			return
+		}
 
 		if util.LogError(err) != nil {
 			time.Sleep(100 * time.Millisecond)

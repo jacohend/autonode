@@ -7,7 +7,6 @@ import (
 	"github.com/perlin-network/noise"
 	"github.com/perlin-network/noise/kademlia"
 	"net"
-	"os"
 	"strconv"
 )
 
@@ -45,9 +44,13 @@ func NewServerNode(config Config) *ServerNode {
 	server.Overlay = kademlia.New(kademlia.WithProtocolEvents(kademlia.Events{
 		OnPeerAdmitted: func(id noise.ID) {
 			fmt.Printf("New peer %s(%s).\n", id.Address, id.ID.String()[:printedLength])
+			server.EventProcessor.Standalone = false
 		},
 		OnPeerEvicted: func(id noise.ID) {
 			fmt.Printf("Removed peer %s(%s).\n", id.Address, id.ID.String()[:printedLength])
+			if num, _ := server.Peers(); server.overlayCheck() && num == 0 {
+				server.EventProcessor.Standalone = true
+			}
 		},
 	}))
 
@@ -85,14 +88,8 @@ func (server *ServerNode) Start() {
 }
 
 func (server *ServerNode) ProcessEvent(event types.Event) {
-	numPeers, _ := server.Peers()
 	//skip processing this if we dispatched it?
-	_, s, exists := server.EventProcessor.GetEvent(event.Id)
-	fmt.Printf("Event State: %t, %v", exists, s)
-	if exists && (s.Dispatcher && numPeers > 0) {
-		os.Stdout.Write([]byte("We're the dispatcher and we have workers; skipping self-assignment\n"))
-		return
-	}
+
 	ack := types.Ack{
 		NodeId:    server.Node.ID().Marshal(),
 		EventId:   event.Id,
