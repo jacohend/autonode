@@ -21,7 +21,7 @@ func (server *ServerNode) Handle(ctx noise.HandlerContext) error {
 	case types.Ack:
 		server.EventProcessor.AcknowledgeEvent(m)
 	case types.Result:
-		server.EventProcessor.ResultHandler(m)
+		go server.EventProcessor.ResultHandler(m)
 		server.EventProcessor.AddResult(m)
 	}
 

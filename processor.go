@@ -72,7 +72,7 @@ func (processor *Processor) AddResult(result types.Result) {
 	defer processor.Lock.Unlock()
 	if id, _, exists := processor.GetEvent(result.EventId); exists {
 		processor.State[id.String()].Result = &result
-		fmt.Printf("AddResult %s: %#v", util.BytesToUlid(result.EventId), result)
+		fmt.Printf("AddResult %s: %#v\n", util.BytesToUlid(result.EventId), result)
 	}
 }
 
@@ -82,6 +82,7 @@ func (processor *Processor) WaitForResult(idbytes []byte) *types.Result {
 	timeout := t.Add(10 * time.Second)
 	for !t.After(timeout) {
 		if _, s, exists := processor.GetEvent(idbytes); exists && s.Result != nil {
+			fmt.Println("Found Result")
 			return s.Result
 		}
 		t = time.Now()
@@ -91,6 +92,9 @@ func (processor *Processor) WaitForResult(idbytes []byte) *types.Result {
 }
 
 func (processor *Processor) CompleteEvent(idbytes []byte) {
+	processor.Lock.Lock()
+	defer processor.Lock.Unlock()
+	fmt.Println("Completing Event")
 	if id, _, exists := processor.GetEvent(idbytes); exists {
 		fmt.Println("Deleting event...")
 		delete(processor.State, id.String())
