@@ -100,6 +100,7 @@ func (processor *Processor) CompleteEvent(idbytes []byte) {
 		fmt.Println("Deleting event...")
 		delete(processor.State, id.String())
 		fmt.Println("Deletion finished")
+		processor.Events.RemoveItemById(idbytes)
 	}
 }
 
