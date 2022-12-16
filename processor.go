@@ -38,6 +38,7 @@ func (processor *Processor) NewEvent(event types.Event, dispatching bool) {
 	processor.Lock.Lock()
 	defer processor.Lock.Unlock()
 	if id, _, exists := processor.GetEvent(event.Id); !exists {
+		fmt.Printf("Creating new event %s\n", id.String())
 		processor.State[id] = &EventStateMachine{
 			Dispatcher: dispatching,
 			Event:      &event,
@@ -53,11 +54,11 @@ func (processor *Processor) AcknowledgeEvent(ack types.Ack) {
 	defer processor.Lock.Unlock()
 	if id, s, exists := processor.GetEvent(ack.EventId); exists {
 		if !s.Dispatcher {
-			fmt.Printf("Deleting event id %s", id.String())
+			fmt.Printf("Deleting event id %s\n", id.String())
 			delete(processor.State, id)
 			processor.Events.RemoveItemById(ack.EventId)
 		} else {
-			fmt.Printf("Storing ack for event id %s", id.String())
+			fmt.Printf("Storing ack for event id %s\n", id.String())
 			s.Ack = &ack
 		}
 	}
