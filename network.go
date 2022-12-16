@@ -44,6 +44,7 @@ func (server *ServerNode) SendToIdBytes(id []byte, msg noise.Serializable) {
 	if util.LogError(err) != nil {
 		return
 	}
+	fmt.Printf("Sending %s to ID %v\n", reflect.TypeOf(msg), sendId)
 	go server.SendToID(sendId, msg)
 }
 

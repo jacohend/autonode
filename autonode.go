@@ -87,7 +87,9 @@ func (server *ServerNode) Start() {
 func (server *ServerNode) ProcessEvent(event types.Event) {
 	numPeers, _ := server.Peers()
 	//skip processing this if we dispatched it?
-	if _, s, exists := server.EventProcessor.GetEvent(event.Id); exists && (s.Dispatcher && numPeers > 0) {
+	_, s, exists := server.EventProcessor.GetEvent(event.Id)
+	fmt.Printf("Event: %t, %v", exists, s)
+	if exists && (s.Dispatcher && numPeers > 0) {
 		os.Stdout.Write([]byte("We're the dispatcher and we have workers; skipping self-assignment\n"))
 		return
 	}
