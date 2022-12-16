@@ -1,10 +1,11 @@
 # Autonode
 
 Peer-to-peer event bus and queue in golang, for creating horizontally-scalable services.
+Easily make horizontally-scalable backend applications.
 
 ## Installation
 
-See the example for an autonode implementation.
+See the [go app skeleton example](example/node.go) for an autonode implementation.
 
 To test the example, run
 
