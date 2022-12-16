@@ -30,8 +30,9 @@ type EventStateMachine struct {
 
 func NewEventProcessor() *Processor {
 	return &Processor{
-		State:  make(map[string]*EventStateMachine),
-		Events: queue.NewQueue(),
+		State:      make(map[string]*EventStateMachine),
+		Events:     queue.NewQueue(),
+		Standalone: true,
 	}
 }
 
@@ -116,7 +117,7 @@ func (processor *Processor) Start() {
 		fmt.Printf("Processing Event: %v\n", event)
 
 		_, s, exists := processor.GetEvent(event.Id)
-		fmt.Printf("Event State: %t, %v", exists, s)
+
 		if exists && (s.Dispatcher && !processor.Standalone) {
 			fmt.Printf("We're the dispatcher and we have workers; skipping self-assignment\n")
 			processor.Events.PushItem(event)
