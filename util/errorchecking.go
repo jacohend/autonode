@@ -13,13 +13,13 @@ func Check(err error) {
 
 func LogAndForget(err error) {
 	if err != nil {
-		fmt.Printf("Error in %s: %s", GetCurrentFuncName(2), err.Error())
+		fmt.Printf("Error in %s: %s\n", GetCurrentFuncName(2), err.Error())
 	}
 }
 
 func LogError(err error) error {
 	if err != nil {
-		fmt.Printf("Error in %s: %s", GetCurrentFuncName(2), err.Error())
+		fmt.Printf("Error in %s: %s\n", GetCurrentFuncName(2), err.Error())
 	}
 	return err
 }

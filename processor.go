@@ -98,7 +98,6 @@ func (processor *Processor) CompleteEvent(idbytes []byte) {
 	if id, _, exists := processor.GetEvent(idbytes); exists {
 		fmt.Println("Deleting event...")
 		delete(processor.State, id.String())
-		util.LogAndForget(processor.Events.RemoveItemById(idbytes))
 		fmt.Println("Deletion finished")
 	}
 }
