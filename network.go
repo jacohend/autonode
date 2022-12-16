@@ -71,7 +71,7 @@ func (server *ServerNode) SendToNetworkSync(msg noise.Serializable) {
 
 func (server *ServerNode) DispatchRandom(msg types.Event) {
 	if server.overlayCheck() {
-		server.Events.NewEvent(msg, true)
+		server.EventProcessor.NewEvent(msg, true)
 		peers := server.Overlay.Table().Peers()
 		result := leaderelection.ElectLeaders(peers, 1, time.Now().String()).([]noise.ID)
 		if len(result) > 0 {

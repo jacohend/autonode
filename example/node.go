@@ -65,7 +65,7 @@ func ApiHandler(w http.ResponseWriter, r *http.Request) {
 		Value:     []byte("sample event"),
 		Timestamp: util.Now(),
 	})
-	result := server.Events.WaitForResult(ulid.Bytes())
+	result := server.EventProcessor.WaitForResult(ulid.Bytes())
 	if result != nil {
 		resultbytes, _ := json.Marshal(result)
 		w.Write(resultbytes)

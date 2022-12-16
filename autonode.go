@@ -11,10 +11,10 @@ import (
 )
 
 type ServerNode struct {
-	Config  Config
-	Node    *noise.Node
-	Overlay *kademlia.Protocol
-	Events  *Processor
+	Config         Config
+	Node           *noise.Node
+	Overlay        *kademlia.Protocol
+	EventProcessor *Processor
 }
 
 func NewServerNode(config Config) *ServerNode {
@@ -38,7 +38,7 @@ func NewServerNode(config Config) *ServerNode {
 	server.Node.RegisterMessage(types.Result{}, types.ResultUnmarshal)
 	server.Node.Handle(server.Handle)
 
-	server.Events = NewEventProcessor()
+	server.EventProcessor = NewEventProcessor()
 	server.SetEventProcessor(server.ProcessEvent)
 
 	server.Overlay = kademlia.New(kademlia.WithProtocolEvents(kademlia.Events{
@@ -55,17 +55,17 @@ func NewServerNode(config Config) *ServerNode {
 
 //Internal method
 func (server *ServerNode) SetEventProcessor(handler func(event types.Event)) {
-	server.Events.Process = handler
+	server.EventProcessor.Process = handler
 }
 
 //External method- for devs
 func (server *ServerNode) SetEventHandler(handler func(event types.Event) (types.Result, error)) {
-	server.Events.EventHandler = handler
+	server.EventProcessor.EventHandler = handler
 }
 
 //External method- for devs
 func (server *ServerNode) SetResultHandler(handler func(event types.Result) error) {
-	server.Events.ResultHandler = handler
+	server.EventProcessor.ResultHandler = handler
 }
 
 func (server *ServerNode) Start() {
@@ -80,14 +80,14 @@ func (server *ServerNode) Start() {
 	fmt.Println("Discovering peers...")
 	server.Overlay.Discover()
 	fmt.Println("Server started. Listening to events.")
-	server.Events.Start()
+	server.EventProcessor.Start()
 }
 
 func (server *ServerNode) ProcessEvent(event types.Event) {
 	numPeers, _ := server.Peers()
 	//skip processing this if we dispatched it?
-	if _, s, exists := server.Events.GetEvent(event.Id); exists && (s.Dispatcher && numPeers > 0) {
-		fmt.Printf("We're the dispatcher and we have workers; skipping self-assignment")
+	if _, s, exists := server.EventProcessor.GetEvent(event.Id); exists && (s.Dispatcher && numPeers > 0) {
+		fmt.Printf("We're the dispatcher and we have workers; skipping self-assignment\n")
 		return
 	}
 	ack := types.Ack{
@@ -95,9 +95,9 @@ func (server *ServerNode) ProcessEvent(event types.Event) {
 		EventId:   event.Id,
 		Timestamp: util.Now(),
 	}
-	defer server.Events.AcknowledgeEvent(ack)
+	defer server.EventProcessor.AcknowledgeEvent(ack)
 	server.SendToNetworkSync(ack)
-	result, err := server.Events.EventHandler(event)
+	result, err := server.EventProcessor.EventHandler(event)
 	util.LogAndForget(err)
 	server.SendToIdBytes(event.NodeId, result)
 }

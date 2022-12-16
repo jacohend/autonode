@@ -17,12 +17,12 @@ func (server *ServerNode) Handle(ctx noise.HandlerContext) error {
 
 	switch m := obj.(type) {
 	case types.Event:
-		server.Events.NewEvent(m, false)
+		server.EventProcessor.NewEvent(m, false)
 	case types.Ack:
-		server.Events.AcknowledgeEvent(m)
+		server.EventProcessor.AcknowledgeEvent(m)
 	case types.Result:
-		server.Events.ResultHandler(m)
-		server.Events.AddResult(m)
+		server.EventProcessor.ResultHandler(m)
+		server.EventProcessor.AddResult(m)
 	}
 
 	return nil
